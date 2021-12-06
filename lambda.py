@@ -51,9 +51,6 @@ def lambda_handler(event, context):
     print('event', event)
     s3 = boto3.client('s3')
 
-    start = int(event['start'])
-    end = int(event['end'])
-
     range = base64.b64decode(event['range'][2:-1])
     mapper = base64.b64decode(event['script'][2:-1])
     cert_file = base64.b64decode(event['cert'][2:-1])
@@ -63,6 +60,8 @@ def lambda_handler(event, context):
 
     with open("/tmp/certs", "wb") as handle:
         pickle.dump(cert_file, handle)
+    
+    print("/tmp/certs", os.environ['KRB5CCNAME'])
 
     try:
         hist = mapper(range)
@@ -76,7 +75,7 @@ def lambda_handler(event, context):
     with open('/tmp/out.pickle', 'wb') as handle:
         pickle.dump(hist, handle)
 
-    filename = f'partial_{str(start)}_{str(end)}_{str(int(time.time()*1000.0))}.pickle'
+    filename = f'partial_{range.id}_{str(int(time.time()*1000.0))}.pickle'
     s3.upload_file(f'/tmp/out.pickle', bucket, filename)
 
     if monitor:
