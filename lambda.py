@@ -49,7 +49,7 @@ def the_monitor(pipe):
 def lambda_handler(event, context):
     thread = None
 
-    if event['debug_command']:
+    if event.get('debug_command'):
         debug_command = event.get('debug_command', debug_command)
         if return_after_debug:
             return {
