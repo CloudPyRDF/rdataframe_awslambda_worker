@@ -12,6 +12,10 @@ import boto3
 import ROOT
 
 bucket = os.getenv('bucket')
+debug_command = os.getenv('debug_command', '')
+return_after_debug = os.getenv('return_after_debug', 'False')
+
+krb5ccname = os.getenv('KRB5CCNAME', '/tmp/certs')
 monitor = (os.getenv('monitor', 'False') == 'True')
 results_fname = os.getenv('results_fname', 'results.txt')
 
@@ -24,7 +28,9 @@ def the_monitor(pipe):
         my_dict = {}
         for line in memInfo.split('\n')[2:-1]:
             splitted = line.split(':')
-            my_dict[splitted[0].strip()] = int(splitted[1].lstrip().split(maxsplit=1)[0])
+            my_dict[splitted[0].strip()] = int(
+                splitted[1].lstrip().split(maxsplit=1)[0]
+            )
         return my_dict
 
     def inspect_me():
@@ -42,6 +48,18 @@ def the_monitor(pipe):
 
 def lambda_handler(event, context):
     thread = None
+
+    if debug_command or event['debug_command']:
+        debug_command = event.get('debug_command', debug_command)
+        if return_after_debug:
+            return {
+                'statusCode': 500,
+                'command': debug_command,
+                'command_output': os.popen(f'{debug_command}').read()
+            }
+        else:
+            print(debug_command)
+
     pipe_in, pipe_out = Pipe()
     if monitor:
         thread = Process(target=the_monitor, args=(pipe_in,))
@@ -58,10 +76,8 @@ def lambda_handler(event, context):
     mapper = pickle.loads(mapper)
     range = pickle.loads(range)
 
-    with open("/tmp/certs", "wb") as handle:
+    with open(f'{krb5ccname}', "wb") as handle:
         pickle.dump(cert_file, handle)
-    
-    print("/tmp/certs", os.environ['KRB5CCNAME'])
 
     try:
         hist = mapper(range)
