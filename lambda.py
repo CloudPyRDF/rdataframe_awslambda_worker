@@ -72,12 +72,22 @@ def lambda_handler(event, context):
     range = base64.b64decode(event['range'][2:-1])
     mapper = base64.b64decode(event['script'][2:-1])
     cert_file = base64.b64decode(event['cert'][2:-1])
+    headers = pickle.loads(base64.b64decode(event['headers'][2:-1]))
 
     mapper = pickle.loads(mapper)
     range = pickle.loads(range)
 
     with open(f'{krb5ccname}', "wb") as handle:
         handle.write(cert_file)
+
+    for header_name, header_content in headers:
+        with open('/tmp/' + header_name, 'w') as f:
+            f.write(header_content)
+        print(header_name)
+        try:
+            ROOT.gInterpreter.Declare(f'#include "/tmp/{header_name}"')
+        except Exception:
+            pass
 
     try:
         hist = mapper(range)
