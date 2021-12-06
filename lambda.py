@@ -77,7 +77,7 @@ def lambda_handler(event, context):
     range = pickle.loads(range)
 
     with open(f'{krb5ccname}', "wb") as handle:
-        pickle.dump(cert_file, handle)
+        handle.write(cert_file)
 
     try:
         hist = mapper(range)
