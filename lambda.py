@@ -41,7 +41,7 @@ def the_monitor(pipe):
     while True:
         os.nice(0)
         with open("/tmp/readings.txt","a") as f:
-            f.write(inspect_me())
+            f.write(json.dumps(inspect_me()))
         # pipe.send(inspect_me())
         time.sleep(1)
 
@@ -112,7 +112,9 @@ def lambda_handler(event, context):
 
     results = []
     with open("/tmp/readings.txt", "r") as f:
-        results = f.readlines()
+        lines = f.readlines()
+        for line in lines:
+            results.append(json.loads(line))
     # while pipe_out.poll():
     #     results.append(pipe_out.recv())
 
