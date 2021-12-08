@@ -1,15 +1,13 @@
-import threading
+import ROOT
 import base64
+import boto3
+import cloudpickle as pickle
 import json
 import os
 import time
 from multiprocessing import Process, Pipe
-import cloudpickle as pickle
-from Inspector import Inspector
-from ast import literal_eval
 
-import boto3
-import ROOT
+from Inspector import Inspector
 
 bucket = os.getenv('bucket')
 debug_command = os.getenv('debug_command', '')
@@ -42,7 +40,9 @@ def the_monitor(pipe):
 
     while True:
         os.nice(0)
-        pipe.send(inspect_me())
+        with open("/tmp/readings.txt","a") as f:
+            f.write(inspect_me())
+        # pipe.send(inspect_me())
         time.sleep(1)
 
 
@@ -101,7 +101,7 @@ def lambda_handler(event, context):
     with open('/tmp/out.pickle', 'wb') as handle:
         pickle.dump(hist, handle)
 
-    filename = f'partial_{range.id}_{str(int(time.time()*1000.0))}.pickle'
+    filename = f'partial_{range.id}_{str(int(time.time() * 1000.0))}.pickle'
     s3.upload_file(f'/tmp/out.pickle', bucket, filename)
 
     if monitor:
@@ -111,8 +111,10 @@ def lambda_handler(event, context):
         print('monitoring finished!')
 
     results = []
-    while pipe_out.poll():
-        results.append(pipe_out.recv())
+    with open("/tmp/readings.txt", "r") as f:
+        results = f.readlines()
+    # while pipe_out.poll():
+    #     results.append(pipe_out.recv())
 
     return {
         'statusCode': 200,
