@@ -42,6 +42,7 @@ def the_monitor(pipe):
         os.nice(0)
         with open("/tmp/readings.txt","a") as f:
             f.write(json.dumps(inspect_me()))
+            f.write("\n")
         # pipe.send(inspect_me())
         time.sleep(1)
 
