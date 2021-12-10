@@ -60,6 +60,11 @@ def lambda_handler(event, context):
             }
         else:
             print(debug_command)
+            
+    try:
+        os.remove("/tmp/readings.txt")
+    except Exception:
+        pass
 
     pipe_in, pipe_out = Pipe()
     if monitor:
@@ -116,6 +121,7 @@ def lambda_handler(event, context):
         lines = f.readlines()
         for line in lines:
             results.append(json.loads(line))
+
     # while pipe_out.poll():
     #     results.append(pipe_out.recv())
 
