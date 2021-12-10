@@ -37,7 +37,8 @@ def the_monitor(pipe):
         inspector.addAttribute("network_rx_bytes", network_measurement())
 
         return inspector.finish()
-
+    with open("/tmp/readings.txt","w") as f:    
+        f.write(" ")
     while True:
         os.nice(0)
         with open("/tmp/readings.txt","a") as f:
@@ -60,7 +61,7 @@ def lambda_handler(event, context):
             }
         else:
             print(debug_command)
-            
+
     try:
         os.remove("/tmp/readings.txt")
     except Exception:
