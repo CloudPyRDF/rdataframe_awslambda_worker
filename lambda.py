@@ -18,7 +18,7 @@ monitor = (os.getenv('monitor', 'False') == 'True')
 results_fname = os.getenv('results_fname', 'results.txt')
 
 
-def the_monitor(pipe):
+def the_monitor(pipe,rangeid):
     def network_measurement():
         memInfo = ""
         with open('/proc/net/dev', 'r') as file:
@@ -31,18 +31,21 @@ def the_monitor(pipe):
             )
         return my_dict
 
-    def inspect_me():
+    def inspect_me(rangeid):
         inspector = Inspector()
         inspector.inspectAll()
         inspector.addAttribute("network_rx_bytes", network_measurement())
+        inspector.addAttribute("taskID", rangeid)
 
         return inspector.finish()
+        
     with open("/tmp/readings.txt","w") as f:    
         f.write(" ")
+
     while True:
         os.nice(0)
         with open("/tmp/readings.txt","a") as f:
-            f.write(json.dumps(inspect_me()))
+            f.write(json.dumps(inspect_me(rangeid)))
             f.write("\n")
         # pipe.send(inspect_me())
         time.sleep(1)
@@ -67,11 +70,7 @@ def lambda_handler(event, context):
     except Exception:
         pass
 
-    pipe_in, pipe_out = Pipe()
-    if monitor:
-        thread = Process(target=the_monitor, args=(pipe_in,))
-        thread.start()
-        print('monitoring started!')
+
 
     print('event', event)
     s3 = boto3.client('s3')
@@ -83,6 +82,12 @@ def lambda_handler(event, context):
 
     mapper = pickle.loads(mapper)
     range = pickle.loads(range)
+
+    pipe_in, pipe_out = Pipe()
+    if monitor:
+        thread = Process(target=the_monitor, args=(pipe_in,range.id))
+        thread.start()
+        print('monitoring started!')
 
     with open(f'{krb5ccname}', "wb") as handle:
         handle.write(cert_file)
