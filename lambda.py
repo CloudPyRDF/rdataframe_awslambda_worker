@@ -19,6 +19,7 @@ results_fname = os.getenv('results_fname', 'results.txt')
 
 
 def the_monitor(pipe,rangeid):
+    rangeid=hash(rangeid)
     def network_measurement():
         memInfo = ""
         with open('/proc/net/dev', 'r') as file:
@@ -38,7 +39,7 @@ def the_monitor(pipe,rangeid):
         inspector.addAttribute("taskID", rangeid)
 
         return inspector.finish()
-        
+
     with open("/tmp/readings.txt","w") as f:    
         f.write(" ")
 
@@ -82,10 +83,11 @@ def lambda_handler(event, context):
 
     mapper = pickle.loads(mapper)
     range = pickle.loads(range)
+    print(range)
 
     pipe_in, pipe_out = Pipe()
     if monitor:
-        thread = Process(target=the_monitor, args=(pipe_in,range.id))
+        thread = Process(target=the_monitor, args=(pipe_in, range))
         thread.start()
         print('monitoring started!')
 
