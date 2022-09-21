@@ -94,7 +94,7 @@ def run_mapper(mapper, rdf_range) -> dict:
 
     with run_monitoring_thread(rdf_range):
         try:
-            hist = mapper(range)
+            hist = mapper(rdf_range)
         except Exception as exception:
             return {
                 'statusCode': 500,
@@ -105,7 +105,7 @@ def run_mapper(mapper, rdf_range) -> dict:
         with open('/tmp/out.pickle', 'wb') as handle:
             pickle.dump(hist, handle)
 
-        filename = f'partial_{range.id}_{str(int(time.time() * 1000.0))}.pickle'
+        filename = f'partial_{rdf_range.id}_{str(int(time.time() * 1000.0))}.pickle'
         s3_client.upload_file(f'/tmp/out.pickle', bucket, filename)
 
     return {
