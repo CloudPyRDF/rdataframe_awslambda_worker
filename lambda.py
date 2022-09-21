@@ -72,7 +72,7 @@ class run_monitoring_thread:
         self.thread.start()
         print('monitoring started!')
 
-    def __exit__(self):
+    def __exit__(self, exception_type, exception_value, traceback):
         if not monitor:
             return
         print('monitoring stopping!')
