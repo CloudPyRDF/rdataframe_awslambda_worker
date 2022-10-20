@@ -156,6 +156,10 @@ def lambda_handler(event, context):
     mapper    = pickle.loads(base64.b64decode(event['script'][2:-1]))
     headers   = pickle.loads(base64.b64decode(event['headers'][2:-1]))
     cert_file = base64.b64decode(event['cert'][2:-1])
+    s3_access_key = pickle.loads(base64.b64decode(event['S3_ACCESS_KEY'][2:-1]))
+    s3_secret_key = pickle.loads(base64.b64decode(event['S3_SECRET_KEY'][2:-1]))
+    os.environ['S3_ACCESS_KEY'] = s3_access_key
+    os.environ['S3_SECRET_KEY'] = s3_secret_key
 
     print(rdf_range)
    
