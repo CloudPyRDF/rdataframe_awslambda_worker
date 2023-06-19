@@ -2,7 +2,7 @@ import time
 import os
 import json
 import logging
-from multiprocessing import Process, Pipe
+from multiprocessing import Process
 
 from Inspector import Inspector
 
