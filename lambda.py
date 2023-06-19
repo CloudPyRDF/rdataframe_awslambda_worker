@@ -107,7 +107,7 @@ def serialize_and_upload_to_s3(hist, rangeid):
 
 def get_unique_filename(range_id):
     timestamp = int(time.time() * 1000.0)
-    return f'partial_{range_id}_{timestamp}.pickle'
+    return f'output/partial_{range_id}_{timestamp}.pickle'
     
 def upload_result_to_s3(obj: bytes, filename: str):
     s3_client = boto3.client('s3')
