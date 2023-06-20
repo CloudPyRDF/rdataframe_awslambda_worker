@@ -30,6 +30,7 @@ def lambda_handler(event, context):
     rdf_range = pickle.loads(base64.b64decode(event['range']))
     mapper    = pickle.loads(base64.b64decode(event['script']))
     headers   = pickle.loads(base64.b64decode(event['headers']))
+    prefix    = pickle.loads(base64.b64decode(event['prefix']))
     cert_file = base64.b64decode(event['cert'])
     s3_access_key = pickle.loads(base64.b64decode(event['S3_ACCESS_KEY']))
     s3_secret_key = pickle.loads(base64.b64decode(event['S3_SECRET_KEY']))
@@ -41,7 +42,7 @@ def lambda_handler(event, context):
     write_cert(cert_file)
     declare_headers(headers)
 
-    return run(mapper, rdf_range)
+    return run(mapper, rdf_range, prefix)
 
 def handle_debug(debug_command: str | None) -> dict | None:
     if debug_command is None:
@@ -72,7 +73,7 @@ def declare_headers(headers: list):
         except Exception:
             logging.error(f'Could not declare header {header_name}')
 
-def run(mapper, rdf_range) -> dict:
+def run(mapper, rdf_range, prefix) -> dict:
     monitor = get_monitor(rdf_range)
 
     with monitoring_thread(monitor):
@@ -85,7 +86,7 @@ def run(mapper, rdf_range) -> dict:
                 'errorMessage': json.dumps(str(exception)),
             }
 
-        filename = serialize_and_upload_to_s3(hist, rdf_range.id)
+        filename = serialize_and_upload_to_s3(hist, prefix, rdf_range.id)
 
     return {
         'statusCode': 200,
@@ -99,15 +100,14 @@ def get_monitor(rdf_range):
     else:
         return EmptyMonitor()
 
-def serialize_and_upload_to_s3(hist, rangeid):
+def serialize_and_upload_to_s3(hist, prefix, rangeid):
     pickled_hist = pickle.dumps(hist)
-    filename = get_unique_filename(rangeid)
+    filename = get_unique_filename(prefix, rangeid)
     upload_result_to_s3(pickled_hist, filename)
     return filename
 
-def get_unique_filename(range_id):
-    timestamp = int(time.time() * 1000.0)
-    return f'output/partial_{range_id}_{timestamp}.pickle'
+def get_unique_filename(prefix, range_id):
+    return f'output/{prefix}/partial_{range_id}'
     
 def upload_result_to_s3(obj: bytes, filename: str):
     s3_client = boto3.client('s3')
