@@ -88,9 +88,10 @@ def run(mapper, rdf_range, prefix) -> dict:
 
         filename = serialize_and_upload_to_s3(hist, prefix, rdf_range.id)
 
+        monitoring_results = monitor.get_monitoring_results()
+        serialize_and_upload_to_s3(monitoring_results, f'monitor-{prefix}', rdf_range.id)
     return {
         'statusCode': 200,
-        'body': json.dumps(monitor.get_monitoring_results()),
         'filename': json.dumps(filename)
     }
 
